@@ -51,6 +51,17 @@ app.get("/", function (req, res) {
     }
   };
   
+  app.get("/users/name-email", function (req, res) {
+    let sql = "SELECT name, email FROM users"; 
+    let condition = createCondition(req.query); 
+    console.log(sql + condition); 
+    // Send query to database
+    con.query(sql + condition, function (err, result, fields) {
+      res.send(result);
+    });
+  });
+
+  
   // route-parameter, filter after ID in the URL
   app.get("/users/:id", function (req, res) {
     // The value for id is located in req.params
