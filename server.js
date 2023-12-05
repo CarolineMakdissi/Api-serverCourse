@@ -51,8 +51,9 @@ app.get("/", function (req, res) {
     }
   };
   
-  app.get("/users/name-email", function (req, res) {
-    let sql = "SELECT name, email FROM users"; 
+  //Users without password
+  app.get("/users/withoutP", function (req, res) {
+    let sql = "SELECT name,username,email FROM users"; 
     let condition = createCondition(req.query); 
     console.log(sql + condition); 
     // Send query to database
@@ -61,7 +62,7 @@ app.get("/", function (req, res) {
     });
   });
 
-  
+
   // route-parameter, filter after ID in the URL
   app.get("/users/:id", function (req, res) {
     // The value for id is located in req.params
@@ -103,8 +104,6 @@ app.get("/", function (req, res) {
       });
     });
 
-
-    /**  PUT **/ //Uppdaterar befintlig användare baserat på deras id 
     
 
     /** POST **/ // 
