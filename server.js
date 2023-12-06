@@ -47,20 +47,21 @@ app.get("/users/:id", function (req, res) {
 const bodyParser = require("body-parser");
 
 app.use(bodyParser.json());
+
 // Create a new user in the database
 app.post("/users", function (req, res) {
-  const { username, password, name, email } = req.body; // Extra user details from request body
+  const {username, password, name, email } = req.body;
 
   if (!username || !password || !name || !email) {
-    // Check if all required fields are provided
     return res.status(400).send("Missing required fields");
   }
 
-  // Create the SQL query to insert a new user into the 'users' table
-  let sql = `INSERT INTO users (username, password, name, email) VALUES ('${username}', '${password}', '${name}', '${email}')`;
+  // Create the SQL query with prepared statement to insert a new user into the 'users' table
+  let sql = `INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)`;
+  let values = [username, password, name, email];
 
-  // Execute the query to insert a new user
-  con.query(sql, function (err, result) {
+  // Execute the query with prepared statement to insert a new user
+  con.query(sql, values, function (err, result) {
     if (err) {
       console.error(err);
       return res.status(500).send("Error creating user");
@@ -68,10 +69,3 @@ app.post("/users", function (req, res) {
     res.status(201).send("User created successfully");
   });
 });
-
-
-
-
-/* PUT */
-
-/** POST - Login **/
