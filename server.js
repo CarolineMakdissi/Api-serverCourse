@@ -1,10 +1,7 @@
-
-
 let app = require("express")(); //Install express- connect with the server
 app.listen(3100);
 console.log("Servern körs på port 3100");
 const crypto = require("crypto"); //Install crypto
-
 
 app.get("/", function (req, res) {
   res.sendFile(__dirname + "/doc.html");
@@ -19,11 +16,10 @@ con = mysql.createConnection({
   multipleStatements: true,
 });
 
-
 app.get("/users", function (req, res) {
   let sql = "SELECT id,name,username,email FROM users";
   // Send query to database
-  con.query(sql , function (err, result, fields) {
+  con.query(sql, function (err, result, fields) {
     res.send(result);
   });
 });
@@ -31,10 +27,16 @@ app.get("/users", function (req, res) {
 // route-parameter, filter after ID in the URL
 app.get("/users/:id", function (req, res) {
   // The value for id is located in req.params
-  let sql = "SELECT id, username, name, email FROM users WHERE id=" + req.params.id;
-  console.log(sql);
+  let sql = "SELECT id, username, name, email FROM users WHERE id=?";
+  let userId = req.params.id;
+
   // Send query to databasen
-  con.query(sql, function (err, result, fields) {
+  con.query(sql, [userId], function (err, result, fields) {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Error retrieving user");
+    }
+
     if (result.length > 0) {
       res.send(result);
     } else {
@@ -50,7 +52,7 @@ app.use(bodyParser.json());
 
 // Create a new user in the database
 app.post("/users", function (req, res) {
-  const {username, password, name, email } = req.body;
+  const { username, password, name, email } = req.body;
 
   if (!username || !password || !name || !email) {
     return res.status(400).send("Missing required fields");
