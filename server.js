@@ -1,7 +1,13 @@
 let app = require("express")(); //Install express- connect with the server
 app.listen(3100);
 console.log("Servern körs på port 3100");
-const crypto = require("crypto"); //Install crypto
+const crypto = require("crypto"); //Install crypto -
+//is imported to use the Node.js cryptography module, which provides functions for cryptographic operations.
+const jwt = require("jsonwebtoken");
+
+const hash = (data) => crypto.createHash("sha256").update(data).digest("hex");
+
+
 
 app.get("/", function (req, res) {
   res.sendFile(__dirname + "/doc.html");
@@ -15,6 +21,8 @@ con = mysql.createConnection({
   database: "api",
   multipleStatements: true,
 });
+
+/**  GET **/
 
 app.get("/users", function (req, res) {
   let sql = "SELECT id,name,username,email FROM users";
@@ -69,5 +77,68 @@ app.post("/users", function (req, res) {
       return res.status(500).send("Error creating user");
     }
     res.status(201).send("User created successfully");
+  });
+});
+
+/** PUT **/
+app.put("/users/:id", function (req, res) {
+  if (
+    !(
+      req.body &&
+      req.body.username &&
+      req.body.password &&
+      req.body.name &&
+      req.body.email
+    )
+  ) {
+  }
+  let sql = `UPDATE users 
+SET username = ?,password= ?, name = ?, email = ?
+WHERE id = ?`;
+
+  let values = [
+    req.body.username,
+    req.body.password,
+    req.body.name,
+    req.email,
+    req.params.id,
+  ];
+
+  con.query(sql, values, function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Error creating a uppdate");
+    }
+    res.status(201).send("Successfully Uppdated");
+  });
+});
+
+
+/**  POST -login **/
+app.post("/login", function (req, res) {
+  //code here to handle calls…
+  let sql = `SELECT * FROM users WHERE users=?`;
+  let values = [req.body.username, password];
+
+  con.query(sql, values, function (err, result, fields) {
+    if (err) {
+      throw err;
+    }
+    if (result.length == 0) {
+      res.sendStatus(401);
+      return;
+    }
+
+    let hashPassword = hash(req.body.password);
+    console.log(hashPassword);
+    console.log(result[0].password);
+    if (result[0].password == passwordHash) {
+      res.send({
+        //Do not return password!
+        username: result[0].username,
+      });
+    } else {
+      res.sendStatus(401);
+    }
   });
 });
