@@ -7,8 +7,6 @@ const jwt = require("jsonwebtoken");
 
 const hash = (data) => crypto.createHash("sha256").update(data).digest("hex");
 
-
-
 app.get("/", function (req, res) {
   res.sendFile(__dirname + "/doc.html");
 });
@@ -53,32 +51,34 @@ app.get("/users/:id", function (req, res) {
   });
 });
 
+
 /*** POST ***/
 const bodyParser = require("body-parser");
-
 app.use(bodyParser.json());
 
 // Create a new user in the database
-app.post("/users", function (req, res) {
+app.post("/users", function (req, res) { 
   const { username, password, name, email } = req.body;
 
   if (!username || !password || !name || !email) {
     return res.status(400).send("Missing required fields");
   }
-
-  // Create the SQL query with prepared statement to insert a new user into the 'users' table
+  
+  // Create the SQL query with prepared statement to insert a new user into the 'users' table 
+  const hashPassword = hash(password);
   let sql = `INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)`;
-  let values = [username, password, name, email];
+  let values = [username, hashPassword, name, email];
 
   // Execute the query with prepared statement to insert a new user
   con.query(sql, values, function (err, result) {
     if (err) {
-      console.error(err);
+      console.error(err); 
       return res.status(500).send("Error creating user");
     }
     res.status(201).send("User created successfully");
   });
 });
+
 
 /** PUT **/
 app.put("/users/:id", function (req, res) {
@@ -114,8 +114,8 @@ WHERE id = ?`;
 });
 
 
-/**  POST -login **/
-app.post("/login", function (req, res) {
+/**  POST -login **/ 
+ app.post("/login", function (req, res) {
   //code here to handle calls…
   let sql = `SELECT * FROM users WHERE users=?`;
   let values = [req.body.username, password];
@@ -132,7 +132,7 @@ app.post("/login", function (req, res) {
     let hashPassword = hash(req.body.password);
     console.log(hashPassword);
     console.log(result[0].password);
-    if (result[0].password == passwordHash) {
+    if (result[0].password == hashPassword) {
       res.send({
         //Do not return password!
         username: result[0].username,
@@ -141,4 +141,4 @@ app.post("/login", function (req, res) {
       res.sendStatus(401);
     }
   });
-});
+}); 
