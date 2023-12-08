@@ -3,12 +3,12 @@ app.listen(3100);
 console.log("Servern körs på port 3100");
 const crypto = require("crypto"); //Install crypto -
 //is imported to use the Node.js cryptography module, which provides functions for cryptographic operations.
-const jwt = require("jsonwebtoken");
+const jwt = require("jsonwebtoken"); //Install jsonwebtoken
 
-const hash = (data) => crypto.createHash("sha256").update(data).digest("hex");
+const hash = (data) => crypto.createHash("sha256").update(data).digest("hex");// Arrow function that takes input ex a password in clear text , hasesh it and return the hash value as string.
 
 app.get("/", function (req, res) {
-  res.sendFile(__dirname + "/doc.html");
+  res.sendFile(__dirname + "/doc.html"); //Display documenation
 });
 
 const mysql = require("mysql"); //Intstall mysql- connect with the database
@@ -16,12 +16,11 @@ con = mysql.createConnection({
   host: "localhost", // database-server IP-adress
   user: "root",
   password: "",
-  database: "api",
+  database: "api", //My database name
   multipleStatements: true,
 });
 
 /**  GET **/
-
 app.get("/users", function (req, res) {
   let sql = "SELECT id,name,username,email FROM users";
   // Send query to database
@@ -51,34 +50,55 @@ app.get("/users/:id", function (req, res) {
   });
 });
 
-
 /*** POST ***/
 const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 
 // Create a new user in the database
-app.post("/users", function (req, res) { 
+app.post("/users", function (req, res) {
   const { username, password, name, email } = req.body;
 
   if (!username || !password || !name || !email) {
     return res.status(400).send("Missing required fields");
   }
-  
-  // Create the SQL query with prepared statement to insert a new user into the 'users' table 
-  const hashPassword = hash(password);
-  let sql = `INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)`;
-  let values = [username, hashPassword, name, email];
 
-  // Execute the query with prepared statement to insert a new user
-  con.query(sql, values, function (err, result) {
+  // Check if user already in the database, if exists then dont continue creating account
+  const usenameSql = `SELECT COUNT(*) AS count FROM users WHERE username = ?`;
+  con.query(usenameSql, [username], function (err, results) {
     if (err) {
-      console.error(err); 
-      return res.status(500).send("Error creating user");
+      console.error(err);
+      res.status(500).send("Something went wrong when checking username!");
+      return;
     }
-    res.status(201).send("User created successfully");
+
+    if (results[0].count > 0) {
+      res.status(409).send("User already exsits!"); // duplicate http status
+      return;
+    }
+
+    // Create the SQL query with prepared statement to insert a new user into the 'users' table
+    const hashPassword = hash(password);
+    const sql = `INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)`;
+    const values = [username, hashPassword, name, email];
+
+    // Execute the query with prepared statement to insert a new user
+    con.query(sql, values, function (err, results) {
+      if (err) {
+        console.error(err);
+        res.status(500).send("Error creating user");
+        return;
+      }
+
+      // send data
+      res.status(200).send({
+        id: results?.insertId,
+        username,
+        name,
+        email,
+      });
+    });
   });
 });
-
 
 /** PUT **/
 app.put("/users/:id", function (req, res) {
@@ -122,7 +142,7 @@ app.post("/login", function (req, res) {
     return;
   }
 
-  const sql = `SELECT * FROM users WHERE username = ? AND password = ?;`
+  const sql = `SELECT * FROM users WHERE username = ? AND password = ?;`;
   const hashPassword = hash(password);
   const values = [username, hashPassword];
 
