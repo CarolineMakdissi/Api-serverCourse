@@ -5,7 +5,7 @@ const crypto = require("crypto"); //Install crypto -
 //is imported to use the Node.js cryptography module, which provides functions for cryptographic operations.
 const jwt = require("jsonwebtoken"); //Install jsonwebtoken
 
-const hash = (data) => crypto.createHash("sha256").update(data).digest("hex");// Arrow function that takes input ex a password in clear text , hasesh it and return the hash value as string.
+const hash = (data) => crypto.createHash("sha256").update(data).digest("hex"); // Arrow function that takes input ex a password in clear text , hasesh it and return the hash value as string.
 
 app.get("/", function (req, res) {
   res.sendFile(__dirname + "/doc.html"); //Display documenation
@@ -45,7 +45,7 @@ app.get("/users/:id", function (req, res) {
     if (result.length > 0) {
       res.send(result);
     } else {
-    res.status(204).send("Not Found!"); // 204=not found
+      res.status(204).send("Not Found!"); // 204=not found
     }
   });
 });
@@ -63,7 +63,7 @@ app.post("/users", function (req, res) {
   }
 
   // Check if user already in the database, if exists then dont continue creating account
-  const usenameSql = `SELECT COUNT(*) AS count FROM users WHERE username = ?`;
+  const usenameSql = "SELECT COUNT(*) AS count FROM users WHERE username = ?";
   con.query(usenameSql, [username], function (err, results) {
     if (err) {
       console.error(err);
@@ -78,7 +78,7 @@ app.post("/users", function (req, res) {
 
     // Create the SQL query with prepared statement to insert a new user into the 'users' table
     const hashPassword = hash(password);
-    const sql = `INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)`;
+    const sql = "INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)";
     const values = [username, hashPassword, name, email];
 
     // Execute the query with prepared statement to insert a new user
@@ -102,29 +102,29 @@ app.post("/users", function (req, res) {
 
 /** PUT **/
 app.put("/users/:id", function (req, res) {
-    const { username, password, name, email } = req.body;
-    const { id } = req.params;
-  
-    if (!(req.body && username && password && name && email)) {
-      res
-        .status(400)
-        .send("Missing required fields, need username, password, name, email");
-      return;
-    }
-  
-    const sql = "UPDATE users SET username = ?, password = ?, name = ?, email = ? WHERE id = ?";
-    const hashPassword = hash(password);
-    const values = [username, hashPassword, name, email, id];
-  
-    con.query(sql, values, function (err, result) {
-      if (err) {
-        console.error(err);
-        return res.status(500).send("Something went wrong when updating user");
-      }
-      res.status(202).send({ id, username, name, email }); // 202 http status - resource updated
-    });
-  });
+  const { username, password, name, email } = req.body;
+  const { id } = req.params;
 
+  if (!(req.body && username && password && name && email)) {
+    res
+      .status(400)
+      .send("Missing required fields, need username, password, name, email");
+    return;
+  }
+
+  const sql =
+    "UPDATE users SET username = ?, password = ?, name = ?, email = ? WHERE id = ?";
+  const hashPassword = hash(password);
+  const values = [username, hashPassword, name, email, id];
+
+  con.query(sql, values, function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).send("Something went wrong when updating user");
+    }
+    res.status(200).send({ id, username, name, email }); // 200 http status - resource updated
+  });
+});
 
 /* POST -login */
 app.post("/login", function (req, res) {
@@ -135,7 +135,7 @@ app.post("/login", function (req, res) {
     return;
   }
 
-  const sql = `SELECT * FROM users WHERE username = ? AND password = ?;`;
+  const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
   const hashPassword = hash(password);
   const values = [username, hashPassword];
 
