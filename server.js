@@ -45,7 +45,7 @@ app.get("/users/:id", function (req, res) {
     if (result.length > 0) {
       res.send(result);
     } else {
-      res.sendStatus(204); // 204=not found
+    res.status(204).send("Not Found!"); // 204=not found
     }
   });
 });
@@ -102,36 +102,29 @@ app.post("/users", function (req, res) {
 
 /** PUT **/
 app.put("/users/:id", function (req, res) {
-  if (
-    !(
-      req.body &&
-      req.body.username &&
-      req.body.password &&
-      req.body.name &&
-      req.body.email
-    )
-  ) {
-  }
-  let sql = `UPDATE users 
-SET username = ?,password= ?, name = ?, email = ?
-WHERE id = ?`;
-
-  let values = [
-    req.body.username,
-    req.body.password,
-    req.body.name,
-    req.email,
-    req.params.id,
-  ];
-
-  con.query(sql, values, function (err, result) {
-    if (err) {
-      console.error(err);
-      return res.status(500).send("Error creating a uppdate");
+    const { username, password, name, email } = req.body;
+    const { id } = req.params;
+  
+    if (!(req.body && username && password && name && email)) {
+      res
+        .status(400)
+        .send("Missing required fields, need username, password, name, email");
+      return;
     }
-    res.status(201).send("Successfully Uppdated");
+  
+    const sql = "UPDATE users SET username = ?, password = ?, name = ?, email = ? WHERE id = ?";
+    const hashPassword = hash(password);
+    const values = [username, hashPassword, name, email, id];
+  
+    con.query(sql, values, function (err, result) {
+      if (err) {
+        console.error(err);
+        return res.status(500).send("Something went wrong when updating user");
+      }
+      res.status(202).send({ id, username, name, email }); // 202 http status - resource updated
+    });
   });
-});
+
 
 /* POST -login */
 app.post("/login", function (req, res) {
