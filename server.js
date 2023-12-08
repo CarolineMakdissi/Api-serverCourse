@@ -62,30 +62,18 @@ app.post("/users", function (req, res) {
     return res.status(400).send("Missing required fields");
   }
 
-  // Check if user already in the database, if exists then dont continue creating account
-  const usenameSql = "SELECT COUNT(*) AS count FROM users WHERE username = ?";
-  con.query(usenameSql, [username], function (err, results) {
+  // Create the SQL query with prepared statement to insert a new user into the 'users' table
+  const hashPassword = hash(password);
+  const sql =
+    "INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)";
+  const values = [username, hashPassword, name, email];
+
+  // Execute the query with prepared statement to insert a new user. We defined username as unique in databse.
+  // using existing username will result in 500 status
+  con.query(sql, values, function (err, results) {
     if (err) {
       console.error(err);
-      res.status(500).send("Something went wrong when checking username!");
-      return;
-    }
-
-    if (results[0].count > 0) {
-      res.status(409).send("User already exsits!"); // duplicate http status
-      return;
-    }
-
-    // Create the SQL query with prepared statement to insert a new user into the 'users' table
-    const hashPassword = hash(password);
-    const sql = "INSERT INTO users (username, password, name, email) VALUES (?, ?, ?, ?)";
-    const values = [username, hashPassword, name, email];
-
-    // Execute the query with prepared statement to insert a new user
-    con.query(sql, values, function (err, results) {
-      if (err) {
-        console.error(err);
-        res.status(500).send("Error creating user");
+      res.status(500).send("Error creating user, try another username");
         return;
       }
 
@@ -95,7 +83,6 @@ app.post("/users", function (req, res) {
         username,
         name,
         email,
-      });
     });
   });
 });
