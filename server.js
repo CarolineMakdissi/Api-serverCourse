@@ -113,32 +113,44 @@ WHERE id = ?`;
   });
 });
 
+/* POST -login */
+app.post("/login", function (req, res) {
+  const { username, password } = req.body;
 
-/**  POST -login **/ 
- app.post("/login", function (req, res) {
-  //code here to handle calls…
-  let sql = `SELECT * FROM users WHERE users=?`;
-  let values = [req.body.username, password];
+  if (!username || !password) {
+    res.status(400).send("Missing required fields");
+    return;
+  }
 
-  con.query(sql, values, function (err, result, fields) {
+  const sql = `SELECT * FROM users WHERE username = ? AND password = ?;`
+  const hashPassword = hash(password);
+  const values = [username, hashPassword];
+
+  con.query(sql, values, function (err, result) {
     if (err) {
-      throw err;
-    }
-    if (result.length == 0) {
-      res.sendStatus(401);
+      console.error(err);
+      res.status(500).send("Something went wrong when updating user");
       return;
     }
 
-    let hashPassword = hash(req.body.password);
-    console.log(hashPassword);
-    console.log(result[0].password);
-    if (result[0].password == hashPassword) {
-      res.send({
-        //Do not return password!
-        username: result[0].username,
-      });
-    } else {
-      res.sendStatus(401);
+    if (result.length == 0) {
+      res.status(401).send("Username or password incorrect!"); // 401 http status - Unauthorized
+      return;
     }
+
+    const payload = {
+      sub: result[0].username,
+      name: result[0].name,
+      email: result[0].email,
+      exp: Math.floor(Date.now() / 1000) + 60 * 60, // 1 hour expiration time, inpiration from jsonwebtoken docs
+    };
+
+    // return jwt token
+    const token = jwt.sign(
+      payload,
+      "MinEgnaHemlighetSomIngenKanGissaXyz123%&/"
+    );
+
+    res.status(200).send(token);
   });
-}); 
+});
