@@ -10,23 +10,64 @@
       <h1>Documentation - Api</h1>
       <h2>Routes</h2>
 
-      <h2>GET /users</h2>
+      <h2>[*] GET /users</h2>
       <p>
         Returns a list of all users from the database or 204 if the user is
         missing
       </p>
 
-      <h2>GET /users/:id</h2>
-      <p>Returns a specific user based on the provided ID- username unic id</p>
+      <h2>[*] GET /users/:id</h2>
+      <div>
+        Requires: user id that can be found when calling /users <br />
+        Returns: information for specific user based on the provided ID if it
+        exits.<br />
+        Error codes:
+        <ul>
+          <li>500: when something goes wrong while fetching data</li>
+          <li>204: no data was found</li>
+        </ul>
+      </div>
 
       <h2>POST /users</h2>
-      <p>Creates a new user in the database.</p>
+      <div>
+        Creates a new user in the database. <br />
+        <br />
+        Requires: username, password, name, email.
+        <br />
+        Returns: User information that was inserted into database.
+        <ul>
+          <li>400: missing input fields</li>
+          <li>500: Something going wrong when trying to create user</li>
+        </ul>
+      </div>
 
-      <h2>PUT</h2>
-      <p>Uppdate user</p>
-
+      <h2>[*] PUT /users/:id</h2>
+      <div>
+        <br />
+        Requires: username, password, name, email.
+        <br />
+        Returns: updated user information that was inserted into database.
+        <ul>
+          <li>200: user updated succesfully</li>
+          <li>400: missing input fields</li>
+          <li>500: Something going wrong when updating</li>
+        </ul>
+      </div>
       <h2>POST /login</h2>
-      <p>For login- accepts json object</p>
+      <div>
+        Login in a user.
+        <br /><br />
+        Requires: username, password.
+        <br />
+        Returns: jwt token with user info inside.
+        <ul>
+          <li>200: logged in succesfully</li>
+          <li>401: wrong username or password</li>
+          <li>500: Something going wrong when trying to login</li>
+        </ul>
+      </div>
+      <br />
+      <p>[*] = Requires logging in, Bearer token must be provided</p>
     </body>
   </body>
 </html>

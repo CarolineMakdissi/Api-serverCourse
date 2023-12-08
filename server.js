@@ -20,8 +20,33 @@ con = mysql.createConnection({
   multipleStatements: true,
 });
 
+// Middleware function to check token
+function checkIfUserHasValidToken(req, res, next) {
+  let authHeader = req.headers["authorization"];
+  // Check if authHeader is there
+  if (authHeader === undefined) {
+    return res.status(400).send("Bad request, auth header required!");
+  }
+  let token = authHeader.slice(7); // delete "BEARER " from header.
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, "MinEgnaHemlighetSomIngenKanGissaXyz123%&/");
+
+    // Check if the token is expired
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    if (!decoded.exp || decoded.exp < currentTimestamp) {
+      return res.status(401).send("Token has expired, please login");
+    }
+
+    next(); // if we are ok with the result, we should pass to the route logic
+  } catch (err) {
+    return res.status(401).send("Invalid auth token, please login");
+  }
+}
+
 /**  GET **/
-app.get("/users", function (req, res) {
+app.get("/users", checkIfUserHasValidToken, function (req, res) {
   let sql = "SELECT id,name,username,email FROM users";
   // Send query to database
   con.query(sql, function (err, result, fields) {
@@ -30,7 +55,7 @@ app.get("/users", function (req, res) {
 });
 
 // route-parameter, filter after ID in the URL
-app.get("/users/:id", function (req, res) {
+app.get("/users/:id", checkIfUserHasValidToken, function (req, res) {
   // The value for id is located in req.params
   let sql = "SELECT id, username, name, email FROM users WHERE id=?";
   let userId = req.params.id;
@@ -74,21 +99,21 @@ app.post("/users", function (req, res) {
     if (err) {
       console.error(err);
       res.status(500).send("Error creating user, try another username");
-        return;
-      }
+      return;
+    }
 
-      // send data
-      res.status(200).send({
-        id: results?.insertId,
-        username,
-        name,
-        email,
+    // send data
+    res.status(200).send({
+      id: results?.insertId,
+      username,
+      name,
+      email,
     });
   });
 });
 
 /** PUT **/
-app.put("/users/:id", function (req, res) {
+app.put("/users/:id", checkIfUserHasValidToken, function (req, res) {
   const { username, password, name, email } = req.body;
   const { id } = req.params;
 
